@@ -1,17 +1,19 @@
 from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
 import os
 
 app = FastAPI(title="Agentic Honeypot API")
 
+API_KEY = os.getenv("API_KEY", "my-secret-key")
 
-API_KEY = os.getenv("API_KEY", "honeypot")
-API_KEY = "honeypot"  
+# ✅ Define expected request body
+class HoneypotRequest(BaseModel):
+    message: str
 
 @app.post("/honeypot/test")
 def test_honeypot(
-    message: Optional[str] = None,
+    payload: HoneypotRequest,
     x_api_key: str = Header(None)
 ):
     # 🔐 API Key Validation
@@ -21,7 +23,8 @@ def test_honeypot(
     if x_api_key != API_KEY:
         raise HTTPException(status_code=403, detail="Invalid API key")
 
-    # 🧠 Dummy scam detection logic (for tester)
+    message = payload.message
+
     scam_detected = True if message else False
 
     return {
